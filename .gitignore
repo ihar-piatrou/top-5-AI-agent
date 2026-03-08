@@ -52,3 +52,26 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+# Downloaded media files
+media/
+Top5Agent/src/Top5Agent.Api/media/
+
+# Visual Studio
+.vs/
+Top5Agent/.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# API keys / environment overrides — use user-secrets instead
+appsettings.Development.json
+appsettings.Local.json
+
+# Launch settings can contain local environment config
+**/Properties/launchSettings.json
+
+# OS junk
+.DS_Store
+Thumbs.db
+Desktop.ini

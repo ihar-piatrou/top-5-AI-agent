@@ -21,7 +21,11 @@ public static class ScriptsEndpoints
                 .FirstOrDefaultAsync(s => s.IdeaId == ideaId);
 
             return script is null ? Results.NotFound() : Results.Ok(script);
-        });
+        })
+        .WithSummary("Get script by idea ID")
+        .WithDescription("Returns the script for a given idea, including all sections (hook, items 1–5, outro), fact-check reviews, and source URLs.")
+        .Produces<object>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status404NotFound);
 
         group.MapPatch("/{id:guid}/status", async (
             Guid id,
@@ -45,6 +49,16 @@ public static class ScriptsEndpoints
             }
 
             return Results.Ok(new { script.Id, script.Status });
-        });
+        })
+        .WithSummary("Update script status")
+        .WithDescription("""
+            Approve or flag a script for review.
+            Approving enqueues media download: for each script section, one video per media query is fetched from Pexels and saved locally.
+            Marking as 'needs_review' flags the script for manual inspection without triggering any background job.
+            Allowed values: 'approved', 'needs_review'.
+            """)
+        .Produces<object>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status404NotFound);
     }
 }

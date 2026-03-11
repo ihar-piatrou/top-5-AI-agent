@@ -12,7 +12,15 @@ public static class PipelineEndpoints
         {
             var runId = await orchestrator.RunAsync(req.Niche.ToNicheString(), req.Count, req.AutoApprove);
             return Results.Ok(new { RunId = runId });
-        });
+        })
+        .WithSummary("Start a pipeline run")
+        .WithDescription("""
+            Generates the requested number of YouTube 'Top 5' video ideas for the chosen niche.
+            Runs duplicate detection against existing ideas (cosine similarity ≥ 0.85 are rejected).
+            When AutoApprove is true, approved ideas are immediately enqueued for script writing.
+            When false, ideas stay in 'pending' status until manually approved via PATCH /api/ideas/{id}/status.
+            """)
+        .Produces<object>(StatusCodes.Status200OK);
     }
 }
 
@@ -37,7 +45,8 @@ public enum Niche
     PsychologyAndHumanBehavior,
     ExtremePlaces,
     LifeHacksAndTricks,
-    EverydayMistakes
+    EverydayMistakes,
+    DangerousAnimals
 }
 
 public static class NicheExtensions
@@ -64,6 +73,7 @@ public static class NicheExtensions
         Niche.ExtremePlaces => "extreme places",
         Niche.LifeHacksAndTricks => "life hacks and tricks",
         Niche.EverydayMistakes => "everyday mistakes",
+        Niche.DangerousAnimals => "how to protect yourself from dangerous animals",
         _ => niche.ToString().ToLower()
     };
 }

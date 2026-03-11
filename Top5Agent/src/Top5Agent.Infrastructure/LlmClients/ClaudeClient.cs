@@ -18,7 +18,7 @@ public class ClaudeClient(HttpClient httpClient, ILogger<ClaudeClient> logger) :
         var requestBody = new AnthropicRequest
         {
             Model = Model,
-            MaxTokens = 4096,
+            MaxTokens = 16000,
             System = systemPrompt,
             Messages = [new AnthropicMessage { Role = "user", Content = userPrompt }]
         };

@@ -14,8 +14,3 @@ public class MediaAsset
     public ScriptSection ScriptSection { get; set; } = null!;
 }
 
-public enum MediaType
-{
-    Photo,
-    Video
-}

@@ -25,6 +25,9 @@ public class ScriptJsonItem
     [JsonPropertyName("title")]
     public string Title { get; set; } = string.Empty;
 
+    [JsonPropertyName("headline")]
+    public string Headline { get; set; } = string.Empty;
+
     [JsonPropertyName("narration")]
     public string Narration { get; set; } = string.Empty;
 

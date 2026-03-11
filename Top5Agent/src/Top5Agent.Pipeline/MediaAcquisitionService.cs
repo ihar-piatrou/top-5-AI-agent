@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Top5Agent.Core.Interfaces;
-using Top5Agent.Core.Models;
 using Top5Agent.Infrastructure.Data;
 
 namespace Top5Agent.Pipeline;
@@ -12,8 +11,6 @@ public class MediaAcquisitionService(
     ILogger<MediaAcquisitionService> logger)
 {
     private const string MediaRoot = "media";
-    private const int MaxPhotos = 4;
-    private const int MaxVideos = 3;
 
     public async Task DownloadAllAsync(Guid scriptId, Guid runId, CancellationToken ct = default)
     {
@@ -39,53 +36,53 @@ public class MediaAcquisitionService(
         {
             if (section.MediaQuery is null) continue;
 
+            var queries = section.MediaQuery
+                .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            if (queries.Length == 0) continue;
+
             var sectionFolder = SanitizePath(section.Title ?? section.Position.ToString());
             var savePath = Path.Combine(MediaRoot, scriptFolder, sectionFolder);
-            var mediaType = section.MediaType?.ToLowerInvariant() == "video" ? MediaType.Video : MediaType.Photo;
-            var maxResults = mediaType == MediaType.Video ? MaxVideos : MaxPhotos;
 
-            try
+            var existingUrls = (await db.MediaAssets
+                .Where(m => m.ScriptSectionId == section.Id)
+                .Select(m => m.RemoteUrl)
+                .ToListAsync(ct))
+                .ToHashSet();
+
+            var totalNew = 0;
+
+            foreach (var query in queries)
             {
-                var existingUrls = (await db.MediaAssets
-                    .Where(m => m.ScriptSectionId == section.Id)
-                    .Select(m => m.RemoteUrl)
-                    .ToListAsync(ct))
-                    .ToHashSet();
-
-                var assets = await mediaProvider.SearchAndDownloadAsync(section.MediaQuery, mediaType, savePath, maxResults, ct);
-
-                if (assets.Count == 0)
+                try
                 {
-                    logger.LogWarning("No media found for section '{Title}' query: {Query}", section.Title, section.MediaQuery);
-                    continue;
+                    var assets = await mediaProvider.SearchAndDownloadAsync(query, savePath, 1, existingUrls, ct);
+
+                    if (assets.Count == 0)
+                    {
+                        logger.LogWarning("No video found for section '{Title}' query: {Query}", section.Title, query);
+                        continue;
+                    }
+
+                    foreach (var asset in assets)
+                    {
+                        asset.Id = Guid.NewGuid();
+                        asset.ScriptSectionId = section.Id;
+                        asset.CreatedAt = DateTime.UtcNow;
+                        db.MediaAssets.Add(asset);
+                        existingUrls.Add(asset.RemoteUrl);
+                        totalNew++;
+                    }
+
+                    await db.SaveChangesAsync(ct);
                 }
-
-                var newAssets = assets.Where(a => !existingUrls.Contains(a.RemoteUrl)).ToList();
-
-                if (newAssets.Count == 0)
+                catch (Exception ex)
                 {
-                    logger.LogInformation("All {Count} media result(s) already stored for section '{Title}', skipping",
-                        assets.Count, section.Title);
-                    continue;
+                    logger.LogError(ex, "Failed to download video for section '{Title}' query: {Query}", section.Title, query);
                 }
-
-                foreach (var asset in newAssets)
-                {
-                    asset.Id = Guid.NewGuid();
-                    asset.ScriptSectionId = section.Id;
-                    asset.CreatedAt = DateTime.UtcNow;
-                    db.MediaAssets.Add(asset);
-                }
-
-                await db.SaveChangesAsync(ct);
-
-                logger.LogInformation("Downloaded {New} new {Type}(s) for section '{Title}' ({Skipped} duplicate(s) skipped)",
-                    newAssets.Count, mediaType, section.Title, assets.Count - newAssets.Count);
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to download media for section '{Title}'", section.Title);
-            }
+
+            logger.LogInformation("Downloaded {New} video(s) for section '{Title}'", totalNew, section.Title);
         }
     }
 

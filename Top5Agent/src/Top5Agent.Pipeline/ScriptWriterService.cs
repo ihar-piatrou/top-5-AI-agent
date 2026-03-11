@@ -17,7 +17,8 @@ public class ScriptWriterService(
     {
         // Idempotency: return existing script if already written (handles Hangfire retries)
         var existing = await db.Scripts
-            .FirstOrDefaultAsync(s => s.IdeaId == idea.Id && s.Status != ScriptStatus.Draft, ct);
+            .Include(s => s.Sections)
+            .FirstOrDefaultAsync(s => s.IdeaId == idea.Id && (s.Status != ScriptStatus.Draft || s.Sections.Any()), ct);
         if (existing is not null)
         {
             logger.LogInformation("Script already exists for idea {IdeaId}, skipping write", idea.Id);
@@ -89,16 +90,21 @@ public class ScriptWriterService(
 
         foreach (var item in script.Items)
         {
-            var firstMedia = item.Media.FirstOrDefault();
+            var queries = item.Media
+                .Where(m => !string.IsNullOrWhiteSpace(m.Query))
+                .Select(m => m.Query.Trim())
+                .ToList();
+
             sections.Add(new ScriptSection
             {
                 Id = Guid.NewGuid(),
                 ScriptId = scriptId,
                 Position = item.Position,
                 Title = item.Title,
+                Headline = item.Headline,
                 Narration = item.Narration,
-                MediaQuery = firstMedia?.Query,
-                MediaType = firstMedia?.Type,
+                MediaQuery = queries.Count > 0 ? string.Join(";", queries) : null,
+                MediaType = "video",
                 CreatedAt = DateTime.UtcNow
             });
         }

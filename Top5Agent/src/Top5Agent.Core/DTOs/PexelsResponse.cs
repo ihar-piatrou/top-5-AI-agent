@@ -2,33 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace Top5Agent.Core.DTOs;
 
-public class PexelsPhotoResponse
-{
-    [JsonPropertyName("photos")]
-    public PexelsPhoto[] Photos { get; set; } = [];
-}
-
-public class PexelsPhoto
-{
-    [JsonPropertyName("id")]
-    public int Id { get; set; }
-
-    [JsonPropertyName("photographer")]
-    public string Photographer { get; set; } = string.Empty;
-
-    [JsonPropertyName("src")]
-    public PexelsPhotoSrc Src { get; set; } = new();
-}
-
-public class PexelsPhotoSrc
-{
-    [JsonPropertyName("original")]
-    public string Original { get; set; } = string.Empty;
-
-    [JsonPropertyName("large")]
-    public string Large { get; set; } = string.Empty;
-}
-
 public class PexelsVideoResponse
 {
     [JsonPropertyName("videos")]

@@ -46,8 +46,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
             e.Property(x => x.Title).HasMaxLength(300);
+            e.Property(x => x.Headline).HasMaxLength(300);
             e.Property(x => x.Narration).HasColumnType("nvarchar(max)").IsRequired();
-            e.Property(x => x.MediaQuery).HasMaxLength(300);
+            e.Property(x => x.MediaQuery).HasColumnType("nvarchar(max)");
             e.Property(x => x.MediaType).HasMaxLength(20);
             e.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
             e.HasOne(x => x.Script).WithMany(x => x.Sections).HasForeignKey(x => x.ScriptId);

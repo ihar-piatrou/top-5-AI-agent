@@ -144,21 +144,28 @@ public static class Prompts
             - Explain things simply without sounding childish.
 
             RETENTION GOAL
-            - The hook must create curiosity, urgency, surprise, or mild concern within the first 2–3 sentences.
-            - Each item must feel worth staying for.
-            - Vary sentence rhythm slightly to keep the script sounding natural.
-            - Favor concrete details over vague statements.
+            - The hook must stop the scroll. Make the viewer feel like leaving now would cost them something.
+            - Open with the most surprising, unsettling, or counterintuitive fact related to the topic.
+            - Each item must feel worth staying for — build momentum toward the end, not away from it.
+            - Vary sentence rhythm to keep the script sounding natural and alive.
+            - Favor concrete, specific details over vague generalities.
             - Avoid repetition across items.
 
             STRUCTURE
-            - Hook: 2–3 sentences. It should make the viewer want to keep watching.
-            - Intro: optional 1 short sentence only if it improves flow.
+            - Hook: 3–5 sentences. Must do ALL of the following:
+              - Open with a surprising or alarming statement that creates immediate tension.
+              - Tease 1–2 of the most compelling items from the list without revealing them fully.
+              - End with a direct forward pull — give the viewer a reason they MUST stay (e.g. "The one at number 3 surprises almost everyone." or "Most people have no idea number 4 is even possible.").
+              - Do NOT use: "In today's video", "Let's get started", "Welcome back", "Stay tuned", or any generic opener.
             - Items 1–5:
               - each item must have a short, compelling title
               - each item must include narration suitable for about 45–75 seconds of spoken delivery
               - each item must feel distinct from the others
               - each item must include specific visual cues for B-roll
-            - Outro: 1–2 short sentences ending with a specific engagement question.
+              - save the most surprising or impactful item for position 3 or 4 to drive watch-time
+            - Outro: 2–3 sentences. Must:
+              - Briefly reinforce the most memorable takeaway from the list.
+              - End with a specific, personal engagement question that makes viewers want to comment (not generic like "Did you learn something?" — instead tie it to the topic, e.g. "Have you ever been in a situation like number two? Tell me in the comments.").
 
             FACTUAL SAFETY
             - Never invent facts, statistics, dates, rankings, or expert consensus.
@@ -178,15 +185,17 @@ public static class Prompts
             - Prefer natural transitions that sound spoken.
 
             MEDIA CUES
-            - Each item must include 1–2 media entries.
-            - Media must be useful for simple editing with stock footage, photos, or diagrams.
-            - media_query must be concrete, visual, and searchable.
+            - Each item must include exactly 12 media entries, all of type "video".
+            - Do not use type "photo" — only "video".
+            - Each query must be distinct from the others within the same item.
+            - Media queries must be concrete, visual, and searchable stock-video descriptions.
             - Avoid vague queries like "danger", "health issue", or "car problem".
             - Prefer queries like:
-              - "close-up of worn car tire tread"
-              - "hiker walking alone in foggy forest"
+              - "close-up of worn car tire tread on road"
+              - "hiker walking alone in foggy forest trail"
               - "aerial view of Manhattan skyline at sunset"
-            - Media suggestions must match what is realistically available as stock footage or stock photos.
+            - All 12 queries per item should cover different visual angles or moments related to that item's topic.
+            - Media suggestions must match what is realistically available as stock video footage.
 
             OUTPUT DISCIPLINE
             - Output ONLY valid JSON.
@@ -219,14 +228,22 @@ public static class Prompts
                 {
                   "position": 1,
                   "title": "...",
+                  "headline": "...",
                   "narration": "...",
                   "verify_claims": ["claim 1", "claim 2"],
                   "media": [
-                    {
-                      "type": "photo|video",
-                      "query": "specific searchable stock-footage description",
-                      "duration_seconds": 5
-                    }
+                    {"type": "video", "query": "specific searchable stock-video description", "duration_seconds": 5},
+                    {"type": "video", "query": "specific searchable stock-video description", "duration_seconds": 5},
+                    {"type": "video", "query": "specific searchable stock-video description", "duration_seconds": 5},
+                    {"type": "video", "query": "specific searchable stock-video description", "duration_seconds": 5},
+                    {"type": "video", "query": "specific searchable stock-video description", "duration_seconds": 5},
+                    {"type": "video", "query": "specific searchable stock-video description", "duration_seconds": 5},
+                    {"type": "video", "query": "specific searchable stock-video description", "duration_seconds": 5},
+                    {"type": "video", "query": "specific searchable stock-video description", "duration_seconds": 5},
+                    {"type": "video", "query": "specific searchable stock-video description", "duration_seconds": 5},
+                    {"type": "video", "query": "specific searchable stock-video description", "duration_seconds": 5},
+                    {"type": "video", "query": "specific searchable stock-video description", "duration_seconds": 5},
+                    {"type": "video", "query": "specific searchable stock-video description", "duration_seconds": 5}
                   ]
                 }
               ],
@@ -244,13 +261,16 @@ public static class Prompts
             - Avoid jargon, academic language, filler, and repetitive phrasing.
             - Avoid generic openings like "One important thing is" or "Another thing to remember".
             - Prefer concrete examples, real-world situations, and practical explanations.
-            - The hook must be 2–3 sentences only and create curiosity, urgency, surprise, or mild concern.
-            - The outro must be 1–2 sentences and end with a direct question to the viewer.
-            - Each item must contain 1–2 media entries.
-            - Each media query must be concrete, visual, and realistic for stock photos or stock video search.
+            - The hook must be 3–5 sentences. Open with the most surprising or alarming statement tied to the topic. Tease 1–2 of the most compelling items without revealing them. End with a forward-pull line that makes leaving feel like a loss (e.g. "The one at number 3 catches almost everyone off guard."). Never use generic openers.
+            - The outro must be 2–3 sentences. Briefly reinforce the most memorable takeaway, then end with a specific topic-tied engagement question that invites comments — not a generic "did you enjoy this?" question.
+            - Each item must contain exactly 12 media entries.
+            - All media entries must use type "video" — never "photo".
+            - All 12 queries within an item must be distinct from each other and cover different visual moments or angles related to that item.
+            - Each media query must be concrete, visual, and realistic for stock video search.
             - Avoid vague media queries like "car problem", "danger", or "health issue".
             - Prefer specific media queries like "close-up of cracked brake pad", "hiker walking on narrow mountain trail", or "aerial view of Manhattan skyline at night".
             - duration_seconds must be a realistic B-roll duration, usually between 4 and 8 seconds.
+            - Each item must include a "headline" field: an on-screen text overlay (8–16 words) that captures the key point of that item. It must be punchy, direct, and specific — not a vague label.
 
             verify_claims rules:
             - Include every factual statement, ranking, statistic, cause-effect claim, safety claim, or expert claim that would require verification.
@@ -471,7 +491,7 @@ public static class Prompts
             - Rewrite narration for all items as needed so it sounds natural when read aloud
             - Use short, clear, spoken-English sentences
             - Remove awkward phrasing, dense clauses, tongue-twisters, and robotic wording
-            - Preserve the title, item order, item positions, media arrays, and all non-text fields unless a factual correction requires a text adjustment
+            - Preserve the title, item order, item positions, headlines, media arrays, and all non-text fields unless a factual correction requires a text adjustment
             - Polish the hook and outro too, so they sound smooth and natural in spoken delivery
             - Do not add new factual claims, numbers, dates, rankings, or expert statements
             - Do not make the script sound more certain than the fact-check report allows

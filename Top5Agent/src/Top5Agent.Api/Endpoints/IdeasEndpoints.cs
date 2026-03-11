@@ -32,13 +32,20 @@ public static class IdeasEndpoints
                 .ToListAsync();
 
             return Results.Ok(ideas);
-        });
+        })
+        .WithSummary("List ideas")
+        .WithDescription("Returns all ideas ordered by creation date. Filter by status using the query parameter. Possible statuses: pending, approved, rejected, scripted.")
+        .Produces<object>(StatusCodes.Status200OK);
 
         group.MapGet("/{id:guid}", async (Guid id, AppDbContext db) =>
         {
             var idea = await db.Ideas.FindAsync(id);
             return idea is null ? Results.NotFound() : Results.Ok(idea);
-        });
+        })
+        .WithSummary("Get idea by ID")
+        .WithDescription("Returns a single idea with all fields including the embedding vector and topic metadata.")
+        .Produces<object>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status404NotFound);
 
         group.MapPatch("/{id:guid}/status", async (
             Guid id,
@@ -66,7 +73,17 @@ public static class IdeasEndpoints
             }
 
             return Results.Ok(new { idea.Id, idea.Status });
-        });
+        })
+        .WithSummary("Update idea status")
+        .WithDescription("""
+            Approve or reject an idea.
+            Approving enqueues the full processing pipeline: script writing (Claude) → fact review (GPT-4o) → content polishing (Claude).
+            Rejecting marks the idea as rejected with no further action.
+            Allowed values: 'approved', 'rejected'.
+            """)
+        .Produces<object>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status404NotFound);
     }
 }
 

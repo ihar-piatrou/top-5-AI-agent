@@ -16,7 +16,7 @@ public class PexelsMediaProvider(HttpClient httpClient, ILogger<PexelsMediaProvi
         logger.LogDebug("Searching Pexels videos for: {Query} (max {Max})", query, maxResults);
 
         var response = await httpClient.GetFromJsonAsync<PexelsVideoResponse>(
-            $"videos/search?query={Uri.EscapeDataString(query)}&per_page={maxResults}", ct);
+            $"videos/search?query={Uri.EscapeDataString(query)}&per_page={maxResults}&orientation=landscape", ct);
 
         if (response?.Videos is null or [])
         {

@@ -39,6 +39,13 @@ services.AddHttpClient<IMediaProvider, PexelsMediaProvider>(client =>
     client.DefaultRequestHeaders.Add("Authorization", config["Pexels:ApiKey"]);
 });
 
+// ── HeyGen (typed HttpClient) ─────────────────────────────────────────────────
+services.AddHttpClient<HeyGenClient>(client =>
+{
+    client.BaseAddress = new Uri("https://api.heygen.com/");
+    client.DefaultRequestHeaders.Add("X-Api-Key", config["HeyGen:ApiKey"]);
+});
+
 // ── LLM / embedding clients ───────────────────────────────────────────────────
 services.AddScoped<GptClient>();
 services.AddScoped<IEmbeddingClient, OpenAiEmbeddingClient>();
@@ -71,12 +78,17 @@ services.AddScoped<ContentPolisherService>(sp => new ContentPolisherService(
 ));
 
 services.AddScoped<MediaAcquisitionService>();
+services.AddScoped<HeyGenAvatarVideoService>();
+services.AddScoped<HeyGenAudioService>();
+services.AddScoped<HeyGenPollingService>();
 services.AddScoped<PipelineOrchestrator>();
 
 // ── Hangfire jobs ─────────────────────────────────────────────────────────────
 services.AddScoped<GenerateIdeasJob>();
 services.AddScoped<ProcessIdeaJob>();
 services.AddScoped<DownloadMediaJob>();
+services.AddScoped<GenerateHeyGenMediaJob>();
+services.AddScoped<PollHeyGenJobsJob>();
 
 // ── Hangfire ──────────────────────────────────────────────────────────────────
 services.AddHangfire(cfg => cfg
@@ -116,16 +128,22 @@ if (app.Environment.IsDevelopment())
 
 app.UseHangfireDashboard(config["Hangfire:DashboardPath"] ?? "/hangfire");
 
-// ── Hangfire recurring jobs ───────────────────────────────────────────────────
+ //── Hangfire recurring jobs ───────────────────────────────────────────────────
 RecurringJob.AddOrUpdate<GenerateIdeasJob>(
     "daily-idea-generation",
     j => j.ExecuteAsync(CancellationToken.None),
-    "0 9 * * *"); // 09:00 UTC daily
+    Cron.Never());
+
+RecurringJob.AddOrUpdate<PollHeyGenJobsJob>(
+    "poll-heygen-jobs",
+    j => j.ExecuteAsync(CancellationToken.None),
+    "*/2 * * * *"); // every 2 minutes
 
 // ── API endpoints ─────────────────────────────────────────────────────────────
 app.MapPipelineEndpoints();
 app.MapIdeasEndpoints();
 app.MapScriptsEndpoints();
 app.MapMediaEndpoints();
+app.MapHeyGenEndpoints();
 
 app.Run();

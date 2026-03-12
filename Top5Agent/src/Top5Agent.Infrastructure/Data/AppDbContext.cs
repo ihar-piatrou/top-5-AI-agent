@@ -12,6 +12,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Source> Sources => Set<Source>();
     public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
     public DbSet<PipelineRun> PipelineRuns => Set<PipelineRun>();
+    public DbSet<HeygenAvatarVideo> HeygenAvatarVideos => Set<HeygenAvatarVideo>();
+    public DbSet<HeygenAudioFile> HeygenAudioFiles => Set<HeygenAudioFile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -99,6 +101,40 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.TriggerReason).HasMaxLength(200);
             e.Property(x => x.Status).HasMaxLength(50).HasDefaultValue("running");
             e.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        });
+
+        modelBuilder.Entity<HeygenAvatarVideo>(e =>
+        {
+            e.ToTable("heygen_avatar_videos");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
+            e.Property(x => x.HeygenVideoId).HasMaxLength(200).IsRequired();
+            e.Property(x => x.AvatarId).HasMaxLength(200).IsRequired();
+            e.Property(x => x.VoiceId).HasMaxLength(200).IsRequired();
+            e.Property(x => x.ScriptText).HasColumnType("nvarchar(max)").IsRequired();
+            e.Property(x => x.Status).HasMaxLength(50).HasDefaultValue("pending");
+            e.Property(x => x.VideoUrl).HasMaxLength(2000);
+            e.Property(x => x.LocalPath).HasMaxLength(1000);
+            e.Property(x => x.ErrorMessage).HasColumnType("nvarchar(max)");
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            e.HasIndex(x => x.ScriptSectionId).IsUnique();
+            e.HasOne(x => x.ScriptSection).WithOne().HasForeignKey<HeygenAvatarVideo>(x => x.ScriptSectionId);
+        });
+
+        modelBuilder.Entity<HeygenAudioFile>(e =>
+        {
+            e.ToTable("heygen_audio_files");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
+            e.Property(x => x.VoiceId).HasMaxLength(200).IsRequired();
+            e.Property(x => x.ScriptText).HasColumnType("nvarchar(max)").IsRequired();
+            e.Property(x => x.Status).HasMaxLength(50).HasDefaultValue("completed");
+            e.Property(x => x.AudioUrl).HasMaxLength(2000);
+            e.Property(x => x.LocalPath).HasMaxLength(1000);
+            e.Property(x => x.ErrorMessage).HasColumnType("nvarchar(max)");
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            e.HasIndex(x => x.ScriptSectionId).IsUnique();
+            e.HasOne(x => x.ScriptSection).WithOne().HasForeignKey<HeygenAudioFile>(x => x.ScriptSectionId);
         });
     }
 }

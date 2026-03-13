@@ -13,7 +13,7 @@ public class HeyGenAvatarVideoService(
     IConfiguration config,
     ILogger<HeyGenAvatarVideoService> logger)
 {
-    public async Task SubmitAllAsync(Guid scriptId, CancellationToken ct = default)
+    public async Task SubmitAllAsync(Guid scriptId, bool useAvatarIvModel = false, CancellationToken ct = default)
     {
         var avatarId = config["HeyGen:AvatarId"]
             ?? throw new InvalidOperationException("HeyGen:AvatarId is not configured.");
@@ -44,7 +44,7 @@ public class HeyGenAvatarVideoService(
 
             try
             {
-                var videoId = await heyGenClient.CreateAvatarVideoAsync(avatarId, voiceId, scriptText, ct);
+                var videoId = await heyGenClient.CreateAvatarVideoAsync(avatarId, voiceId, scriptText, useAvatarIvModel, ct);
 
                 db.HeygenAvatarVideos.Add(new HeygenAvatarVideo
                 {
@@ -69,15 +69,32 @@ public class HeyGenAvatarVideoService(
         }
     }
 
-    // Items 1–5 use Headline; Hook (0) and Outro (99) use Narration
-    // Wrapped with a 1-second break at start and end for HeyGen avatar pacing
+    // Items 1–5 use Headline prefixed with "Number N."; Hook (0) and Outro (99) use Narration
+    // Wrapped with a 0.5-second break at start and end for HeyGen avatar pacing
     private static string? SelectText(ScriptSection section)
     {
-        var raw = section.Position is >= 1 and <= 5
-            ? section.Headline
-            : section.Narration;
+        string? raw;
+        if (section.Position is >= 1 and <= 5)
+        {
+            var numberWord = section.Position switch
+            {
+                1 => "One",
+                2 => "Two",
+                3 => "Three",
+                4 => "Four",
+                5 => "Five",
+                _ => section.Position.ToString()
+            };
+            raw = string.IsNullOrWhiteSpace(section.Headline)
+                ? null
+                : $"Number {numberWord}. {section.Headline}";
+        }
+        else
+        {
+            raw = section.Narration;
+        }
 
         if (string.IsNullOrWhiteSpace(raw)) return null;
-        return $"<break time=\"1s\" />{raw}<break time=\"1s\" />";
+        return $"<break time=\"0.5s\" />{raw}<break time=\"0.5s\" />";
     }
 }

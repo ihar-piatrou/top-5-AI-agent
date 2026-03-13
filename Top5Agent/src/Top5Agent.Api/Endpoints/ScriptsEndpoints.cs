@@ -29,7 +29,7 @@ public static class ScriptsEndpoints
 
         group.MapPatch("/{id:guid}/status", async (
             Guid id,
-            StatusUpdateRequest req,
+            ScriptStatusUpdateRequest req,
             AppDbContext db,
             IBackgroundJobClient jobClient) =>
         {
@@ -45,15 +45,17 @@ public static class ScriptsEndpoints
 
             if (req.Status == ScriptStatus.Approved)
             {
-                jobClient.Enqueue<DownloadMediaJob>(j => j.ExecuteAsync(id, Guid.Empty, CancellationToken.None));
+                jobClient.Enqueue<DownloadMediaJob>(j => j.ExecuteAsync(id, Guid.Empty, req.UseAvatarIvModel, CancellationToken.None));
             }
 
             return Results.Ok(new { script.Id, script.Status });
         })
-        .WithSummary("Update script status")
+        .WithSummary("Approve script and trigger media download and HeyGen generation")
         .WithDescription("""
             Approve or flag a script for review.
-            Approving enqueues media download: for each script section, one video per media query is fetched from Pexels and saved locally.
+            Approving enqueues media download: for each script section, two videos per media query are fetched from Pexels and saved locally.
+            After media download completes, HeyGen avatar video generation is automatically enqueued.
+            Set useAvatarIvModel to true to use the Avatar IV (engine 4) model; defaults to false (engine 3).
             Marking as 'needs_review' flags the script for manual inspection without triggering any background job.
             Allowed values: 'approved', 'needs_review'.
             """)
@@ -62,3 +64,5 @@ public static class ScriptsEndpoints
         .Produces(StatusCodes.Status404NotFound);
     }
 }
+
+public sealed record ScriptStatusUpdateRequest(string Status, bool UseAvatarIvModel = false);

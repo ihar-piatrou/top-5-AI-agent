@@ -29,7 +29,7 @@ public static class MediaEndpoints
             return Results.Ok(assets);
         })
         .WithSummary("List media assets for a script")
-        .WithDescription("Returns all downloaded Pexels video assets for the given script ID, grouped by script section. Each section has one video per media query (up to 12 per section).")
+        .WithDescription("Returns all downloaded Pexels video assets for the given script ID, grouped by script section. Each section has two videos per media query (up to 12 queries per section).")
         .Produces<object>(StatusCodes.Status200OK);
     }
 }

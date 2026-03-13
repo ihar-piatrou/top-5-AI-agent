@@ -70,13 +70,15 @@ public static class HeyGenEndpoints
         .WithDescription("Enqueues a one-off poll of all pending/processing HeyGen avatar videos. Useful for testing without waiting for the 2-minute recurring job.")
         .Produces<object>(StatusCodes.Status200OK);
 
-        group.MapPost("/{scriptId:guid}/generate", (Guid scriptId, IBackgroundJobClient jobClient) =>
+        group.MapPost("/{scriptId:guid}/generate", (Guid scriptId, GenerateHeyGenRequest request, IBackgroundJobClient jobClient) =>
         {
-            var jobId = jobClient.Enqueue<GenerateHeyGenMediaJob>(j => j.ExecuteAsync(scriptId, CancellationToken.None));
+            var jobId = jobClient.Enqueue<GenerateHeyGenMediaJob>(j => j.ExecuteAsync(scriptId, request.UseAvatarIvModel, CancellationToken.None));
             return Results.Ok(new { JobId = jobId });
         })
         .WithSummary("Manually trigger HeyGen media generation for a script")
-        .WithDescription("Enqueues avatar video submission and TTS audio generation for all sections of the given script. Use this to re-trigger generation after a failure or to test without going through the full media download step.")
+        .WithDescription("Enqueues avatar video submission and TTS audio generation for all sections of the given script. Set useAvatarIvModel to true to use the Avatar IV (engine 4) model.")
         .Produces<object>(StatusCodes.Status200OK);
     }
 }
+
+public sealed record GenerateHeyGenRequest(bool UseAvatarIvModel = false);

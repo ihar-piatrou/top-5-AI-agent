@@ -15,8 +15,10 @@ public class PexelsMediaProvider(HttpClient httpClient, ILogger<PexelsMediaProvi
     {
         logger.LogDebug("Searching Pexels videos for: {Query} (max {Max})", query, maxResults);
 
+        // Request more results than needed to have candidates after dedup filtering
+        var perPage = Math.Max(maxResults * 5, 10);
         var response = await httpClient.GetFromJsonAsync<PexelsVideoResponse>(
-            $"videos/search?query={Uri.EscapeDataString(query)}&per_page={maxResults}&orientation=landscape", ct);
+            $"videos/search?query={Uri.EscapeDataString(query)}&per_page={perPage}&orientation=landscape", ct);
 
         if (response?.Videos is null or [])
         {
@@ -27,9 +29,8 @@ public class PexelsMediaProvider(HttpClient httpClient, ILogger<PexelsMediaProvi
         var assets = new List<MediaAsset>();
         var videoDir = Path.Combine(savePath, "video");
 
-        for (var i = 0; i < response.Videos.Count(); i++)
+        foreach (var video in response.Videos)
         {
-            var video = response.Videos[i];
             var videoFile = video.VideoFiles.FirstOrDefault(f => f.Quality == "hd")
                 ?? video.VideoFiles.FirstOrDefault();
 
@@ -47,7 +48,7 @@ public class PexelsMediaProvider(HttpClient httpClient, ILogger<PexelsMediaProvi
                 Attribution = $"Video by {video.User.Name} on Pexels"
             });
 
-            if (i + 1 >= maxResults)
+            if (assets.Count >= maxResults)
                 break;
         }
 

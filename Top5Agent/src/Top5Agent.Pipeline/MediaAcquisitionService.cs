@@ -32,6 +32,15 @@ public class MediaAcquisitionService(
 
         var scriptFolder = SanitizePath(script.Idea.Title);
 
+        // Seed with every URL already downloaded for any section of this script
+        // so the same video is never reused across sections.
+        var sectionIds = sections.Select(s => s.Id).ToList();
+        var existingUrls = (await db.MediaAssets
+            .Where(m => sectionIds.Contains(m.ScriptSectionId))
+            .Select(m => m.RemoteUrl)
+            .ToListAsync(ct))
+            .ToHashSet();
+
         foreach (var section in sections)
         {
             if (section.MediaQuery is null) continue;
@@ -44,19 +53,13 @@ public class MediaAcquisitionService(
             var sectionFolder = SanitizePath(section.Title ?? section.Position.ToString());
             var savePath = Path.Combine(MediaRoot, scriptFolder, sectionFolder);
 
-            var existingUrls = (await db.MediaAssets
-                .Where(m => m.ScriptSectionId == section.Id)
-                .Select(m => m.RemoteUrl)
-                .ToListAsync(ct))
-                .ToHashSet();
-
             var totalNew = 0;
 
             foreach (var query in queries)
             {
                 try
                 {
-                    var assets = await mediaProvider.SearchAndDownloadAsync(query, savePath, 1, existingUrls, ct);
+                    var assets = await mediaProvider.SearchAndDownloadAsync(query, savePath, 2, existingUrls, ct);
 
                     if (assets.Count == 0)
                     {

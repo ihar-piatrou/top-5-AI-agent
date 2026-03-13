@@ -9,9 +9,9 @@ namespace Top5Agent.Infrastructure.MediaClients;
 public class HeyGenClient(HttpClient httpClient, ILogger<HeyGenClient> logger)
 {
     public async Task<string> CreateAvatarVideoAsync(
-        string avatarId, string voiceId, string text, CancellationToken ct = default)
+        string avatarId, string voiceId, string text, bool useAvatarIvModel = false, CancellationToken ct = default)
     {
-        logger.LogDebug("Submitting HeyGen avatar video, avatar={AvatarId}, chars={Len}", avatarId, text.Length);
+        logger.LogDebug("Submitting HeyGen avatar video, avatar={AvatarId}, useIv={UseIv}, chars={Len}", avatarId, useAvatarIvModel, text.Length);
 
         var body = new HeyGenVideoRequest
         {
@@ -19,7 +19,7 @@ public class HeyGenClient(HttpClient httpClient, ILogger<HeyGenClient> logger)
             [
                 new HeyGenVideoInput
                 {
-                    Character = new HeyGenCharacter { AvatarId = avatarId },
+                    Character = new HeyGenCharacter { AvatarId = avatarId, UseAvatarIvModel = useAvatarIvModel },
                     Voice = new HeyGenVoice { VoiceId = voiceId, InputText = text }
                 }
             ]
@@ -106,7 +106,7 @@ public class HeyGenClient(HttpClient httpClient, ILogger<HeyGenClient> logger)
     {
         [JsonPropertyName("type")]                public string Type { get; set; } = "avatar";
         [JsonPropertyName("avatar_id")]           public string AvatarId { get; set; } = string.Empty;
-        [JsonPropertyName("use_avatar_iv_model")] public bool UseAvatarIvModel { get; set; } = false;
+        [JsonPropertyName("use_avatar_iv_model")] public bool UseAvatarIvModel { get; set; }
     }
 
     private sealed class HeyGenVoice

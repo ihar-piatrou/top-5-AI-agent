@@ -159,7 +159,7 @@ public static class Prompts
               - Do NOT use: "In today's video", "Let's get started", "Welcome back", "Stay tuned", or any generic opener.
             - Items 1–5:
               - each item must have a short, compelling title
-              - each item must include narration suitable for about 45–75 seconds of spoken delivery
+              - each item must include narration suitable for about 60–90 seconds of spoken delivery
               - each item must feel distinct from the others
               - each item must include specific visual cues for B-roll
               - save the most surprising or impactful item for position 3 or 4 to drive watch-time
@@ -195,6 +195,7 @@ public static class Prompts
               - "hiker walking alone in foggy forest trail"
               - "aerial view of Manhattan skyline at sunset"
             - All 12 queries per item should cover different visual angles or moments related to that item's topic.
+            - Media queries must be unique across ALL 5 items — do not reuse the same query in more than one item.
             - Media suggestions must match what is realistically available as stock video footage.
 
             OUTPUT DISCIPLINE
@@ -255,9 +256,10 @@ public static class Prompts
             - Items must be numbered 1 through 5 using the position field.
             - Each item must feel distinct and not repeat the same angle or wording.
             - Each item title must be short, clear, and compelling.
-            - Each narration must be between 120 and 180 words.
+            - Each narration must be between 180 and 250 words.
             - Narration must sound natural when spoken aloud.
             - Use short, clear sentences and simple spoken English.
+            - Each narration must include a brief real-life or plausible example that illustrates the point — something a viewer could imagine happening to themselves or someone they know. Make it feel concrete and specific, not generic.
             - Avoid jargon, academic language, filler, and repetitive phrasing.
             - Avoid generic openings like "One important thing is" or "Another thing to remember".
             - Prefer concrete examples, real-world situations, and practical explanations.
@@ -266,6 +268,7 @@ public static class Prompts
             - Each item must contain exactly 12 media entries.
             - All media entries must use type "video" — never "photo".
             - All 12 queries within an item must be distinct from each other and cover different visual moments or angles related to that item.
+            - Media queries must be unique across ALL 5 items — never reuse the same query in more than one item.
             - Each media query must be concrete, visual, and realistic for stock video search.
             - Avoid vague media queries like "car problem", "danger", or "health issue".
             - Prefer specific media queries like "close-up of cracked brake pad", "hiker walking on narrow mountain trail", or "aerial view of Manhattan skyline at night".

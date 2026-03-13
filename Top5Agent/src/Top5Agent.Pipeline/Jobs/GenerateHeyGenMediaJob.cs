@@ -7,11 +7,11 @@ public class GenerateHeyGenMediaJob(
     HeyGenAudioService audioService,
     ILogger<GenerateHeyGenMediaJob> logger)
 {
-    public async Task ExecuteAsync(Guid scriptId, CancellationToken ct = default)
+    public async Task ExecuteAsync(Guid scriptId, bool useAvatarIvModel = false, CancellationToken ct = default)
     {
-        logger.LogInformation("Starting HeyGen media generation for script {ScriptId}", scriptId);
+        logger.LogInformation("Starting HeyGen media generation for script {ScriptId} (useAvatarIvModel={UseIv})", scriptId, useAvatarIvModel);
 
-        await avatarVideoService.SubmitAllAsync(scriptId, ct);
+        await avatarVideoService.SubmitAllAsync(scriptId, useAvatarIvModel, ct);
         await audioService.GenerateAllAsync(scriptId, ct);
 
         logger.LogInformation("HeyGen media generation complete for script {ScriptId}", scriptId);

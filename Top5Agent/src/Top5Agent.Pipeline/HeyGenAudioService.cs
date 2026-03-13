@@ -35,7 +35,8 @@ public class HeyGenAudioService(
             .Where(s => s.ScriptId == scriptId && s.Position >= 1 && s.Position <= 5)
             .ToListAsync(ct);
 
-        var scriptFolder = SanitizePath(script.Idea.Title);
+        var scriptFolder = MediaFileNaming.Sanitize(script.Idea.Title);
+        var scriptPath = Path.Combine(MediaRoot, scriptFolder);
 
         foreach (var section in sections)
         {
@@ -63,9 +64,8 @@ public class HeyGenAudioService(
             {
                 var audioUrl = await heyGenClient.TextToSpeechAsync(voiceId, section.Narration, ct);
 
-                var sectionFolder = SanitizePath(section.Title ?? section.Position.ToString());
-                var saveDir = Path.Combine(MediaRoot, scriptFolder, sectionFolder, "audio");
-                var localPath = await DownloadFileAsync(audioUrl, saveDir, $"{Guid.NewGuid()}.mp3", ct);
+                var fileName = MediaFileNaming.AudioFileName(section.Position, section.Title);
+                var localPath = await DownloadFileAsync(audioUrl, scriptPath, fileName, ct);
 
                 audioFile.AudioUrl = audioUrl;
                 audioFile.LocalPath = localPath;
@@ -96,10 +96,4 @@ public class HeyGenAudioService(
         return filePath;
     }
 
-    private static string SanitizePath(string name)
-    {
-        var invalid = Path.GetInvalidFileNameChars();
-        var clean = string.Concat(name.Select(c => invalid.Contains(c) ? '_' : c));
-        return clean.Trim().TrimEnd('.');
-    }
 }

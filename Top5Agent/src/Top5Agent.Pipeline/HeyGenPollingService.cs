@@ -44,13 +44,12 @@ public class HeyGenPollingService(
 
                 if (status == HeygenVideoStatus.Completed && videoUrl is not null)
                 {
-                    var scriptFolder = SanitizePath(video.ScriptSection.Script.Idea.Title);
-                    var sectionFolder = SanitizePath(
-                        video.ScriptSection.Title ?? video.ScriptSection.Position.ToString());
-                    var saveDir = Path.Combine(MediaRoot, scriptFolder, sectionFolder, "avatar");
+                    var scriptFolder = MediaFileNaming.Sanitize(video.ScriptSection.Script.Idea.Title);
+                    var scriptPath = Path.Combine(MediaRoot, scriptFolder);
+                    var fileName = MediaFileNaming.AvatarFileName(video.ScriptSection.Position, video.ScriptSection.Title);
 
                     video.VideoUrl = videoUrl;
-                    video.LocalPath = await DownloadFileAsync(videoUrl, saveDir, $"{Guid.NewGuid()}.mp4", ct);
+                    video.LocalPath = await DownloadFileAsync(videoUrl, scriptPath, fileName, ct);
                     video.Status = HeygenVideoStatus.Completed;
                     video.CompletedAt = DateTime.UtcNow;
 
@@ -86,10 +85,4 @@ public class HeyGenPollingService(
         return filePath;
     }
 
-    private static string SanitizePath(string name)
-    {
-        var invalid = Path.GetInvalidFileNameChars();
-        var clean = string.Concat(name.Select(c => invalid.Contains(c) ? '_' : c));
-        return clean.Trim().TrimEnd('.');
-    }
 }

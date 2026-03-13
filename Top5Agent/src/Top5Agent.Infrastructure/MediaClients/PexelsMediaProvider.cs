@@ -27,7 +27,7 @@ public class PexelsMediaProvider(HttpClient httpClient, ILogger<PexelsMediaProvi
         }
 
         var assets = new List<MediaAsset>();
-        var videoDir = Path.Combine(savePath, "video");
+        var videoDir = savePath;
 
         foreach (var video in response.Videos)
         {

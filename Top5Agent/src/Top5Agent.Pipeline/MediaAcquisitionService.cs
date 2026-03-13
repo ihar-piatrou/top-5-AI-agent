@@ -30,7 +30,9 @@ public class MediaAcquisitionService(
 
         logger.LogInformation("Downloading media for script {ScriptId}: {Count} sections", scriptId, sections.Count);
 
-        var scriptFolder = SanitizePath(script.Idea.Title);
+        var scriptFolder = MediaFileNaming.Sanitize(script.Idea.Title);
+        var scriptPath = Path.Combine(MediaRoot, scriptFolder);
+        Directory.CreateDirectory(Path.Combine(scriptPath, "result"));
 
         // Seed with every URL already downloaded for any section of this script
         // so the same video is never reused across sections.
@@ -50,8 +52,9 @@ public class MediaAcquisitionService(
 
             if (queries.Length == 0) continue;
 
-            var sectionFolder = SanitizePath(section.Title ?? section.Position.ToString());
-            var savePath = Path.Combine(MediaRoot, scriptFolder, sectionFolder);
+            // Start counter after already-saved assets so retries produce unique filenames
+            var videoCounter = await db.MediaAssets
+                .CountAsync(m => m.ScriptSectionId == section.Id, ct);
 
             var totalNew = 0;
 
@@ -59,7 +62,7 @@ public class MediaAcquisitionService(
             {
                 try
                 {
-                    var assets = await mediaProvider.SearchAndDownloadAsync(query, savePath, 2, existingUrls, ct);
+                    var assets = await mediaProvider.SearchAndDownloadAsync(query, scriptPath, 2, existingUrls, ct);
 
                     if (assets.Count == 0)
                     {
@@ -69,6 +72,16 @@ public class MediaAcquisitionService(
 
                     foreach (var asset in assets)
                     {
+                        videoCounter++;
+                        var newFileName = MediaFileNaming.VideoFileName(section.Position, videoCounter, section.Title);
+                        var newPath = Path.Combine(scriptPath, newFileName);
+
+                        if (asset.LocalPath != null && File.Exists(asset.LocalPath) && asset.LocalPath != newPath)
+                        {
+                            File.Move(asset.LocalPath, newPath);
+                            asset.LocalPath = newPath;
+                        }
+
                         asset.Id = Guid.NewGuid();
                         asset.ScriptSectionId = section.Id;
                         asset.CreatedAt = DateTime.UtcNow;
@@ -87,12 +100,5 @@ public class MediaAcquisitionService(
 
             logger.LogInformation("Downloaded {New} video(s) for section '{Title}'", totalNew, section.Title);
         }
-    }
-
-    private static string SanitizePath(string name)
-    {
-        var invalid = Path.GetInvalidFileNameChars();
-        var clean = string.Concat(name.Select(c => invalid.Contains(c) ? '_' : c));
-        return clean.Trim().TrimEnd('.');
     }
 }
